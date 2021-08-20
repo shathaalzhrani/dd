@@ -1,0 +1,49 @@
+version: "3.7"
+
+services:
+  api:
+    build: ./backend
+    environment:
+      - CONNECTION_STRING=postgres://admin123:admin123@db/postgresdb
+    depends_on:
+      - postgresdb
+    restart: always
+    networks:
+      - private-backend
+      - public-frontend
+
+  web:
+    build: ./frontend
+    ports: 
+      - "3000:3000"
+    depends_on: 
+      - api
+    environment:
+      - API_URL=http://api:3001/data
+    networks:
+      - public-frontend
+      
+  postgresdb:
+    image: postgres:11.2-alpine
+    volumes: 
+      - postgres-config:/etc/postgresql/postgresql.conf
+      - ./init_sql_scripts/:/docker-entrypoint-initdb.d    
+    environment:
+      POSTGRES_USER: admin123
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: postgresdb
+    networks:
+      - private-backend
+
+volumes: 
+  postgres-config:
+
+networks:
+  private-backend:
+    name: private-backend
+    driver: bridge
+  public-frontend:
+    name: public-frontend
+    driver: bridge
+    
+  
